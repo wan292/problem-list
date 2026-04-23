@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Problem List Builder</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-elev: #161b22;
+    --bg-elev-2: #1c2128;
+    --border: #30363d;
+    --border-soft: #21262d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-muted: #6e7681;
+    --accent: #58a6ff;
+    --accent-soft: #1f6feb33;
+    --success: #3fb950;
+    --warning: #d29922;
+    --danger: #f85149;
+    --highlight: #bb8009;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 1100px) {
+    .container { grid-template-columns: 1fr; }
+  }
+
+  .header {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--bg-elev), var(--bg-elev-2));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .header h1 {
+    font-size: 1.8em;
+    background: linear-gradient(135deg, var(--accent), #79c0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 0.9em;
+    margin-top: 5px;
+  }
+
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .panel-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent);
+    color: var(--accent);
+    position: sticky;
+    top: 0;
+    background: var(--bg-elev);
+    z-index: 10;
+  }
+
+  .section {
+    margin-bottom: 25px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 12px 15px;
+    background: linear-gradient(90deg, var(--accent-soft), transparent);
+    border-bottom: 1px solid var(--border-soft);
+    font-weight: 600;
+    font-size: 1.05em;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .section-header:hover { background: linear-gradient(90deg, var(--accent-soft), var(--border-soft)); }
+
+  .section-body {
+    padding: 15px;
+  }
+
+  .subsection {
+    margin-bottom: 18px;
+    padding-left: 10px;
+    border-left: 2px solid var(--border);
+  }
+
+  .subsection-title {
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .field-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  select, input[type="text"], input[type="number"], textarea {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9em;
+    transition: all 0.15s;
+  }
+
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  select option { background: var(--bg-elev); }
+
+  textarea { resize: vertical; min-height: 50px; }
+
+  .check-btn {
+    display: inline-block;
+    padding: 2px 8px;
+    background: transparent;
+    border: 1px solid var(--warning);
+    color: var(--warning);
+    border-radius: 4px;
+    font-size: 0.7em;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.15s;
+  }
+
+  .check-btn:hover { background: var(--warning); color: var(--bg); }
+  .check-btn.active { background: var(--warning); color: var(--bg); }
+
+  .field-label-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Output styles */
+  .output-section {
+    margin-bottom: 20px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 15px;
+  }
+
+  .output-section-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.05em;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .output-sub {
+    margin-bottom: 10px;
+  }
+
+  .output-sub-title {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .output-item {
+    padding: 4px 10px;
+    margin-bottom: 3px;
+    background: var(--bg);
+    border-radius: 4px;
+    font-size: 0.9em;
+    border-left: 3px solid var(--accent);
+  }
+
+  .output-item.check {
+    border-left-color: var(--warning);
+    background: #d2992215;
+  }
+
+  .output-item.check::after {
+    content: ' ⚠ check';
+    color: var(--warning);
+    font-size: 0.75em;
+    font-style: italic;
+  }
+
+  .empty-state {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.85em;
+    padding: 8px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+    position: sticky;
+    top: 45px;
+    background: var(--bg-elev);
+    padding: 5px 0;
+    z-index: 9;
+  }
+
+  .tab {
+    padding: 8px 16px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.15s;
+  }
+
+  .tab.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .spoken-output {
+    padding: 15px;
+    background: var(--bg);
+    border-radius: 6px;
+    line-height: 1.8;
+    font-size: 0.95em;
+    white-space: pre-wrap;
+  }
+
+  .spoken-output .highlight {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .btn:hover { background: var(--border); }
+  .btn.primary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); }
+  .btn.danger:hover { background: var(--danger); color: var(--text); }
+
+  .copied { color: var(--success) !important; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  .note {
+    font-size: 0.75em;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  .measurement-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .measurement-group input { flex: 1; }
+  .measurement-group .unit {
+    font-size: 0.85em;
+    color: var(--text-dim);
+    padding: 0 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>⚙ Orthodontic Problem List Builder</h1>
+    <p>Fill in presentation order → Auto-organized into official sheet format</p>
+  </div>
+
+  <!-- INPUT PANEL -->
+  <div class="panel">
+    <div class="panel-title">📋 Input (Presentation Order)</div>
+
+    <div class="actions">
+      <button class="btn danger" onclick="resetAll()">🗑 Reset All</button>
+      <span id="resetNotice" style="font-size:0.8em; color:var(--text-muted); align-self:center;"></span>
+    </div>
+
+    <!-- 1. DEMOGRAPHIC -->
+    <div class="section">
+      <div class="section-header">1. Demographic & History</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Patient Age / Growth Status</label>
+          <select id="growth">
+            <option value="">—</option>
+            <option value="growing">Growing patient</option>
+            <option value="non-growing">Non-growing patient</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Medical History (notable findings)</label>
+          <textarea id="medicalHistory" placeholder="e.g., none significant, or specific pathology"></textarea>
+        </div>
+        <div class="field">
+          <label>Oral Habits</label>
+          <input type="text" id="oralHabits" placeholder="e.g., thumb sucking, tongue thrust, none">
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. EXTRAORAL FRONTAL -->
+    <div class="section">
+      <div class="section-header">2. Extraoral — Frontal View</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Rule of Thirds (Facial Proportions)</label>
+          <select id="facialThirds">
+            <option value="">—</option>
+            <option value="equal/proportional">Equal / Proportional</option>
+            <option value="increased lower facial height">Increased lower facial height</option>
+            <option value="decreased lower facial height">Decreased lower facial height</option>
+            <option value="increased middle facial height">Increased middle facial height</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Facial Asymmetry / Rule of Fifths</label>
+          <select id="facialAsymmetry">
+            <option value="">—</option>
+            <option value="symmetric">Symmetric</option>
+            <option value="mild asymmetry">Mild asymmetry</option>
+            <option value="deviated to the right">Jaw deviated to the right</option>
+            <option value="deviated to the left">Jaw deviated to the left</option>
+            <option value="nose deviation">Nose deviation</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. FRONTAL SMILE -->
+    <div class="section">
+      <div class="section-header">3. Extraoral — Frontal Smile</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Upper Dental Midline (vs facial midline)</label>
+          <div class="field-row-3">
+            <select id="upperMidlinePos">
+              <option value="">—</option>
+              <option value="on">On midline</option>
+              <option value="shifted to the right">Shifted right</option>
+              <option value="shifted to the left">Shifted left</option>
+            </select>
+            <input type="number" id="upperMidlineMm" placeholder="mm" step="0.5">
+            <span class="unit" style="align-self:center; color:var(--text-dim); font-size:0.85em;">mm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Gingival Display / Lip Line</label>
+          <select id="lipLine">
+            <option value="">—</option>
+            <option value="normal">Normal lip line</option>
+            <option value="low">Low lip line</option>
+            <option value="high">High lip line (gummy smile)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Buccal Corridors</label>
+          <select id="buccalCorridors">
+            <option value="">—</option>
+            <option value="normal">Normal</option>
+            <option value="wide">Wide (suggests expansion)</option>
+            <option value="narrow">Narrow</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Smile Arc <span class="note">(not in sheet, for reference)</span></label>
+          <select id="smileArc">
+            <option value="">—</option>
+            <option value="consonant">Consonant</option>
+            <option value="flat">Flat</option>
+            <option value="reverse">Reverse</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. PROFILE -->
+    <div class="section">
+      <div class="section-header">4. Extraoral — Profile View</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Facial Profile</label>
+          <select id="facialProfile">
+            <option value="">—</option>
+            <option value="straight">Straight</option>
+            <option value="convex">Convex</option>
+            <option value="concave">Concave</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nasolabial Angle</label>
+          <select id="nasolabialAngle">
+            <option value="">—</option>
+            <option value="normal">Normal</option>
+            <option value="increased">Increased (obtuse)</option>
+            <option value="decreased">Decreased (acute)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Upper Lip (vs E-line)</label>
+            <select id="upperLip">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="protruded">Protruded</option>
+              <option value="retruded">Retruded</option>
+            </select>
+          </div>
+          <div>
+            <label>Lower Lip (vs E-line)</label>
+            <select id="lowerLip">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="protruded">Protruded</option>
+              <option value="retruded">Retruded</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Lip Competence</label>
+          <select id="lipCompetence">
+            <option value="">—</option>
+            <option value="competent">Competent</option>
+            <option value="incompetent">Incompetent</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Lip Soft Tissue Thickness</label>
+          <select id="lipThickness">
+            <option value="">—</option>
+            <option value="normal">Normal</option>
+            <option value="thin">Thin</option>
+            <option value="thick">Thick</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. INTRAORAL -->
+    <div class="section">
+      <div class="section-header">5. Intraoral Photos (Pathology)</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Caries</label>
+          <select id="cariesType">
+            <option value="">—</option>
+            <option value="none">No caries</option>
+            <option value="multiple caries">Multiple caries</option>
+            <option value="specific">Specific teeth (list below)</option>
+          </select>
+          <input type="text" id="cariesSpecific" placeholder="If specific: list teeth (e.g., 16, 26, 36)" style="margin-top:6px;">
+        </div>
+        <div class="field">
+          <label>Oral Hygiene</label>
+          <select id="oralHygiene">
+            <option value="">—</option>
+            <option value="good">Good</option>
+            <option value="fair">Fair</option>
+            <option value="poor">Poor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Gingival Recession</label>
+          <select id="recession">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="present">Present (list teeth in notes)</option>
+          </select>
+          <input type="text" id="recessionNotes" placeholder="Location if present" style="margin-top:6px;">
+        </div>
+        <div class="field">
+          <label>Attached Gingiva</label>
+          <select id="attachedGingiva">
+            <option value="">—</option>
+            <option value="normal">Normal</option>
+            <option value="decreased">Decreased</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Gingivitis</label>
+          <select id="gingivitis">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="mild">Mild gingivitis</option>
+            <option value="moderate">Moderate gingivitis</option>
+            <option value="severe">Severe gingivitis</option>
+            <option value="generalized">Generalized gingivitis</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Calculus Deposition</label>
+          <select id="calculus">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="mild">Mild calculus deposition</option>
+            <option value="moderate">Moderate calculus deposition</option>
+            <option value="heavy">Heavy calculus deposition</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. CAST - MOLAR/CANINE -->
+    <div class="section">
+      <div class="section-header">6. Cast — Occlusion</div>
+      <div class="section-body">
+        <div class="subsection">
+          <div class="subsection-title">Molar Classification</div>
+          <div class="field-row">
+            <div>
+              <label>Right Molar</label>
+              <select id="molarR">
+                <option value="">—</option>
+                <option value="Class II quarter cusp">Class II quarter cusp</option>
+                <option value="Class II half cusp">Class II half cusp</option>
+                <option value="Class II three quarter cusp">Class II three quarter cusp</option>
+                <option value="Class II full cusp">Class II full cusp</option>
+                <option value="Class III quarter cusp">Class III quarter cusp</option>
+                <option value="Class III half cusp">Class III half cusp</option>
+                <option value="Class III three quarter cusp">Class III three quarter cusp</option>
+                <option value="Class III full cusp">Class III full cusp</option>
+              </select>
+            </div>
+            <div>
+              <label>Left Molar</label>
+              <select id="molarL">
+                <option value="">—</option>
+                <option value="Class II quarter cusp">Class II quarter cusp</option>
+                <option value="Class II half cusp">Class II half cusp</option>
+                <option value="Class II three quarter cusp">Class II three quarter cusp</option>
+                <option value="Class II full cusp">Class II full cusp</option>
+                <option value="Class III quarter cusp">Class III quarter cusp</option>
+                <option value="Class III half cusp">Class III half cusp</option>
+                <option value="Class III three quarter cusp">Class III three quarter cusp</option>
+                <option value="Class III full cusp">Class III full cusp</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-title">Canine Classification</div>
+          <div class="field-row">
+            <div>
+              <label>Right Canine</label>
+              <select id="canineR">
+                <option value="">—</option>
+                <option value="Class II quarter cusp">Class II quarter cusp</option>
+                <option value="Class II half cusp">Class II half cusp</option>
+                <option value="Class II three quarter cusp">Class II three quarter cusp</option>
+                <option value="Class II full cusp">Class II full cusp</option>
+                <option value="Class III quarter cusp">Class III quarter cusp</option>
+                <option value="Class III half cusp">Class III half cusp</option>
+                <option value="Class III three quarter cusp">Class III three quarter cusp</option>
+                <option value="Class III full cusp">Class III full cusp</option>
+              </select>
+            </div>
+            <div>
+              <label>Left Canine</label>
+              <select id="canineL">
+                <option value="">—</option>
+                <option value="Class II quarter cusp">Class II quarter cusp</option>
+                <option value="Class II half cusp">Class II half cusp</option>
+                <option value="Class II three quarter cusp">Class II three quarter cusp</option>
+                <option value="Class II full cusp">Class II full cusp</option>
+                <option value="Class III quarter cusp">Class III quarter cusp</option>
+                <option value="Class III half cusp">Class III half cusp</option>
+                <option value="Class III three quarter cusp">Class III three quarter cusp</option>
+                <option value="Class III full cusp">Class III full cusp</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-title">Midline & Bite</div>
+          <div class="field">
+            <label>Lower Midline (vs upper)</label>
+            <div class="field-row-3">
+              <select id="lowerMidlinePos">
+                <option value="">—</option>
+                <option value="on">On midline</option>
+                <option value="shifted to the right">Shifted right</option>
+                <option value="shifted to the left">Shifted left</option>
+              </select>
+              <input type="number" id="lowerMidlineMm" placeholder="mm" step="0.5">
+              <span class="unit" style="align-self:center; color:var(--text-dim); font-size:0.85em;">mm</span>
+            </div>
+          </div>
+          <div class="field-row">
+            <div>
+              <label>Overjet</label>
+              <div class="measurement-group">
+                <input type="number" id="overjet" placeholder="value" step="0.5">
+                <span class="unit">mm</span>
+              </div>
+            </div>
+            <div>
+              <label>Overbite</label>
+              <div class="measurement-group">
+                <input type="number" id="overbite" placeholder="value">
+                <span class="unit">%</span>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Anterior Crossbite</label>
+            <select id="anteriorCrossbite">
+              <option value="">—</option>
+              <option value="none">None</option>
+              <option value="present">Present</option>
+            </select>
+            <input type="text" id="anteriorCrossbiteNotes" placeholder="Teeth involved" style="margin-top:6px;">
+          </div>
+          <div class="field">
+            <label>Posterior Dental Crossbite</label>
+            <select id="posteriorCrossbite">
+              <option value="">—</option>
+              <option value="none">None</option>
+              <option value="right (B/L)">Right side (B/L)</option>
+              <option value="left (B/L)">Left side (B/L)</option>
+              <option value="bilateral (B/L)">Bilateral (B/L)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. UPPER ARCH -->
+    <div class="section">
+      <div class="section-header">7. Cast — Upper Arch</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Rotated Teeth (Upper)</label>
+          <select id="rotatedUpperType">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="multiple rotated teeth">Multiple rotated teeth</option>
+            <option value="specific">Specific teeth</option>
+          </select>
+          <input type="text" id="rotatedUpperSpecific" placeholder="Teeth numbers" style="margin-top:6px;">
+        </div>
+        <div class="field">
+          <label>Malposed / Blocked-out Teeth (Upper)</label>
+          <select id="malposedUpperType">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="multiple malposed teeth">Multiple malposed teeth</option>
+            <option value="specific">Specific teeth</option>
+          </select>
+          <input type="text" id="malposedUpperSpecific" placeholder="Teeth numbers" style="margin-top:6px;">
+        </div>
+        <div class="field">
+          <label>Upper Space Analysis</label>
+          <div class="field-row-3">
+            <select id="upperSpaceType">
+              <option value="">—</option>
+              <option value="well-aligned">Well aligned</option>
+              <option value="Crowding">Crowding</option>
+              <option value="Spacing">Spacing</option>
+            </select>
+            <input type="number" id="upperSpaceMm" placeholder="mm" step="0.5">
+            <span class="unit" style="align-self:center; color:var(--text-dim); font-size:0.85em;">mm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Bolton Discrepancy</label>
+          <input type="text" id="boltonDiscrepancy" placeholder="e.g., anterior excess 2mm in lower arch">
+        </div>
+        <div class="field">
+          <label>Congenitally Missing Teeth</label>
+          <input type="text" id="missingTeeth" placeholder="Teeth numbers or 'none'">
+        </div>
+        <div class="field">
+          <label>Previous Extractions</label>
+          <input type="text" id="previousExtractions" placeholder="Teeth numbers or 'none'">
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. LOWER ARCH -->
+    <div class="section">
+      <div class="section-header">8. Cast — Lower Arch</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Rotated Teeth (Lower)</label>
+          <select id="rotatedLowerType">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="multiple rotated teeth">Multiple rotated teeth</option>
+            <option value="specific">Specific teeth</option>
+          </select>
+          <input type="text" id="rotatedLowerSpecific" placeholder="Teeth numbers" style="margin-top:6px;">
+        </div>
+        <div class="field">
+          <label>Malposed / Blocked-out Teeth (Lower)</label>
+          <select id="malposedLowerType">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="multiple malposed teeth">Multiple malposed teeth</option>
+            <option value="specific">Specific teeth</option>
+          </select>
+          <input type="text" id="malposedLowerSpecific" placeholder="Teeth numbers" style="margin-top:6px;">
+        </div>
+        <div class="field">
+          <label>Lower Space Analysis</label>
+          <div class="field-row-3">
+            <select id="lowerSpaceType">
+              <option value="">—</option>
+              <option value="well-aligned">Well aligned</option>
+              <option value="Crowding">Crowding</option>
+              <option value="Spacing">Spacing</option>
+            </select>
+            <input type="number" id="lowerSpaceMm" placeholder="mm" step="0.5">
+            <span class="unit" style="align-self:center; color:var(--text-dim); font-size:0.85em;">mm</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. GRID & CURVE -->
+    <div class="section">
+      <div class="section-header">9. Cast — Grid & Curve of Spee</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Dental Arch Asymmetry</label>
+          <select id="archAsymmetry">
+            <option value="">—</option>
+            <option value="symmetric">Symmetric</option>
+            <option value="upper: right side ahead">Upper: right ahead of left</option>
+            <option value="upper: left side ahead">Upper: left ahead of right</option>
+            <option value="lower: right side ahead">Lower: right ahead of left</option>
+            <option value="lower: left side ahead">Lower: left ahead of right</option>
+            <option value="both arches asymmetric">Both arches asymmetric</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Transverse Constriction (skeletal)</label>
+          <select id="transverseConstriction">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="Constricted Maxillary Arch">Constricted maxillary arch</option>
+            <option value="Wide Maxillary Arch">Wide maxillary arch</option>
+            <option value="Constricted Mandibular Arch">Constricted mandibular arch</option>
+            <option value="Wide Mandibular Arch">Wide mandibular arch</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Occlusal Cant</label>
+          <select id="occlusalCant">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="present">Present</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Curve of Spee</label>
+          <select id="curveOfSpee">
+            <option value="">—</option>
+            <option value="flat">Flat / Normal</option>
+            <option value="deep">Deep</option>
+            <option value="reverse">Reverse</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. OPG -->
+    <div class="section">
+      <div class="section-header">10. OPG / Panoramic</div>
+      <div class="section-body">
+        <div class="field">
+          <label>OPG Findings</label>
+          <textarea id="opgFindings" placeholder="e.g., no abnormalities, condylar asymmetry, impacted teeth"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. CEPH SKELETAL -->
+    <div class="section">
+      <div class="section-header">11. Ceph — Skeletal</div>
+      <div class="section-body">
+        <div class="subsection">
+          <div class="subsection-title">Sagittal</div>
+          <div class="field">
+            <label>Skeletal Class</label>
+            <select id="skeletalClass">
+              <option value="">—</option>
+              <option value="Class I">Class I</option>
+              <option value="Class II">Class II</option>
+              <option value="Class III">Class III</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Maxilla</label>
+            <select id="maxilla">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="prognathic maxilla">Prognathic maxilla</option>
+              <option value="retrognathic maxilla">Retrognathic maxilla</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Mandible</label>
+            <select id="mandible">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="prognathic mandible">Prognathic mandible</option>
+              <option value="retrognathic mandible">Retrognathic mandible</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Chin</label>
+            <select id="chin">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="protruded chin">Protruded chin</option>
+              <option value="retruded chin">Retruded chin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-title">Vertical</div>
+          <div class="field">
+            <label>Lower Anterior Facial Height (LAFH)</label>
+            <select id="lafh">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="increased">Increased</option>
+              <option value="decreased">Decreased</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Mandibular Plane Angle / Divergence</label>
+            <select id="mpDivergence">
+              <option value="">—</option>
+              <option value="normodivergent">Normodivergent</option>
+              <option value="hyperdivergent">Hyperdivergent (high MP angle)</option>
+              <option value="hypodivergent">Hypodivergent (low MP angle)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Posterior Facial Height</label>
+            <select id="pfh">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="increased">Increased</option>
+              <option value="decreased">Decreased</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. CEPH DENTAL -->
+    <div class="section">
+      <div class="section-header">12. Ceph — Dental (Incisors)</div>
+      <div class="section-body">
+        <div class="field-row">
+          <div>
+            <label>Upper Incisor Inclination</label>
+            <select id="upperInclination">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="proclined">Proclined</option>
+              <option value="retroclined">Retroclined</option>
+            </select>
+          </div>
+          <div>
+            <label>Lower Incisor Inclination</label>
+            <select id="lowerInclination">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="proclined">Proclined</option>
+              <option value="retroclined">Retroclined</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Upper Incisor Position</label>
+            <select id="upperPosition">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="protruded">Protruded</option>
+              <option value="retruded">Retruded</option>
+            </select>
+          </div>
+          <div>
+            <label>Lower Incisor Position</label>
+            <select id="lowerPosition">
+              <option value="">—</option>
+              <option value="normal">Normal</option>
+              <option value="protruded">Protruded</option>
+              <option value="retruded">Retruded</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="panel">
+    <div class="panel-title">📄 Output (Official Sheet Order)</div>
+
+    <div class="tabs">
+      <div class="tab active" id="tabBtn-sheet" onclick="switchTab('sheet')">Sheet Format</div>
+      <div class="tab" id="tabBtn-spoken" onclick="switchTab('spoken')">Spoken Script</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="copyBtn" onclick="copyOutput()">📋 Copy current view</button>
+    </div>
+
+    <!-- SHEET FORMAT TAB -->
+    <div id="tab-sheet" class="tab-content active">
+      <div id="sheetOutput"></div>
+    </div>
+
+    <!-- SPOKEN TAB -->
+    <div id="tab-spoken" class="tab-content">
+      <div class="spoken-output" id="spokenOutput"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // All input IDs
+  const inputIds = [
+    'growth','medicalHistory','oralHabits',
+    'facialThirds','facialAsymmetry',
+    'upperMidlinePos','upperMidlineMm','lipLine','buccalCorridors','smileArc',
+    'facialProfile','nasolabialAngle','upperLip','lowerLip','lipCompetence','lipThickness',
+    'cariesType','cariesSpecific','oralHygiene','recession','recessionNotes','attachedGingiva','gingivitis','calculus',
+    'molarR','molarL','canineR','canineL',
+    'lowerMidlinePos','lowerMidlineMm','overjet','overbite',
+    'anteriorCrossbite','anteriorCrossbiteNotes','posteriorCrossbite',
+    'rotatedUpperType','rotatedUpperSpecific','malposedUpperType','malposedUpperSpecific',
+    'upperSpaceType','upperSpaceMm','boltonDiscrepancy','missingTeeth','previousExtractions',
+    'rotatedLowerType','rotatedLowerSpecific','malposedLowerType','malposedLowerSpecific',
+    'lowerSpaceType','lowerSpaceMm',
+    'archAsymmetry','transverseConstriction','occlusalCant','curveOfSpee',
+    'opgFindings',
+    'skeletalClass','maxilla','mandible','chin',
+    'lafh','mpDivergence','pfh',
+    'upperInclination','lowerInclination','upperPosition','lowerPosition'
+  ];
+
+  const state = {};
+  const checkFlags = {}; // tracks "check later" for each field
+
+  // Auto-save key (localStorage persists across reloads, not just session)
+  const STORAGE_KEY = 'orthoProblemListState_v2';
+
+  // Restore saved state on page load
+  function restoreState() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const data = JSON.parse(saved);
+      Object.keys(data).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data[id]) {
+          el.value = data[id];
+          state[id] = data[id];
+        }
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  // Save state on every change
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) { /* ignore */ }
+  }
+
+  // Initialize listeners
+  inputIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => { state[id] = el.value; saveState(); render(); });
+      el.addEventListener('change', () => { state[id] = el.value; saveState(); render(); });
+    }
+  });
+
+  function val(id) {
+    return (state[id] || '').trim();
+  }
+
+  function has(id) {
+    return val(id) !== '' && val(id) !== '—';
+  }
+
+  function isNeg(id) {
+    const v = val(id).toLowerCase();
+    return v === 'none' || v === 'normal' || v === 'no caries' || v === 'symmetric' ||
+           v === 'competent' || v === 'well-aligned' || v === 'flat' || v === 'flat / normal' ||
+           v === 'equal/proportional' || v === 'on midline' || v === 'on' || v === 'good';
+  }
+
+  // Build an item: returns {text, isCheck}
+  function item(text, flagId) {
+    if (!text) return null;
+    return { text, isCheck: !!checkFlags[flagId] };
+  }
+
+  function renderItems(items) {
+    items = items.filter(i => i && i.text);
+    if (items.length === 0) return '<div class="empty-state">—</div>';
+    return items.map(i =>
+      `<div class="output-item${i.isCheck ? ' check' : ''}">${i.text}</div>`
+    ).join('');
+  }
+
+  function buildSheetOutput() {
+    // GENERAL
+    const generalItems = [];
+    if (has('growth')) generalItems.push({ text: val('growth').charAt(0).toUpperCase() + val('growth').slice(1) });
+    if (has('oralHabits') && val('oralHabits').toLowerCase() !== 'none') generalItems.push({ text: `Oral habit: ${val('oralHabits')}` });
+    if (has('oralHygiene') && val('oralHygiene') !== 'good') generalItems.push({ text: `${val('oralHygiene').charAt(0).toUpperCase() + val('oralHygiene').slice(1)} oral hygiene` });
+
+    // PATHOLOGICAL
+    const pathItems = [];
+    if (has('medicalHistory') && !['none','none significant','n/a'].includes(val('medicalHistory').toLowerCase()))
+      pathItems.push({ text: `Medical: ${val('medicalHistory')}` });
+    if (has('cariesType') && !isNeg('cariesType')) {
+      let txt = val('cariesType');
+      if (val('cariesType') === 'specific' && has('cariesSpecific')) txt = `Caries on ${val('cariesSpecific')}`;
+      pathItems.push({ text: txt.charAt(0).toUpperCase() + txt.slice(1) });
+    }
+    if (has('gingivitis') && !isNeg('gingivitis')) {
+      const v = val('gingivitis');
+      pathItems.push({ text: v.charAt(0).toUpperCase() + v.slice(1) + (v.includes('gingivitis') ? '' : ' gingivitis') });
+    }
+    if (has('calculus') && !isNeg('calculus')) {
+      const v = val('calculus');
+      pathItems.push({ text: v.charAt(0).toUpperCase() + v.slice(1) + (v.includes('calculus') ? '' : ' calculus deposition') });
+    }
+    if (has('recession') && val('recession') === 'present') {
+      const loc = has('recessionNotes') ? ` (${val('recessionNotes')})` : '';
+      pathItems.push({ text: `Gingival recession${loc}` });
+    }
+    if (has('attachedGingiva') && val('attachedGingiva') === 'decreased')
+      pathItems.push({ text: 'Decreased attached gingiva' });
+    if (has('opgFindings') && !['none','no abnormalities','n/a'].includes(val('opgFindings').toLowerCase()))
+      pathItems.push({ text: `OPG: ${val('opgFindings')}` });
+
+    // SKELETAL — SAGITTAL
+    const skSag = [];
+    if (has('skeletalClass')) {
+      let reasons = [];
+      if (has('maxilla') && !isNeg('maxilla')) reasons.push(val('maxilla'));
+      if (has('mandible') && !isNeg('mandible')) reasons.push(val('mandible'));
+      let classTxt = `Skeletal ${val('skeletalClass')}`;
+      if (reasons.length) classTxt += ` due to ${reasons.join(' and ')}`;
+      skSag.push({ text: classTxt });
+    } else {
+      if (has('maxilla') && !isNeg('maxilla')) skSag.push({ text: val('maxilla').charAt(0).toUpperCase() + val('maxilla').slice(1) });
+      if (has('mandible') && !isNeg('mandible')) skSag.push({ text: val('mandible').charAt(0).toUpperCase() + val('mandible').slice(1) });
+    }
+    if (has('chin') && !isNeg('chin')) skSag.push({ text: val('chin').charAt(0).toUpperCase() + val('chin').slice(1) });
+
+    // SKELETAL — VERTICAL
+    const skVert = [];
+    if (has('lafh') && !isNeg('lafh')) skVert.push({ text: `${val('lafh').charAt(0).toUpperCase() + val('lafh').slice(1)} lower anterior facial height` });
+    if (has('pfh') && !isNeg('pfh')) skVert.push({ text: `${val('pfh').charAt(0).toUpperCase() + val('pfh').slice(1)} posterior facial height` });
+    if (has('mpDivergence') && !isNeg('mpDivergence')) skVert.push({ text: val('mpDivergence').charAt(0).toUpperCase() + val('mpDivergence').slice(1) });
+
+    // Vertical from rule of thirds (skeletal side — patient facial proportion is reported in Soft Tissue normally, but if increased LAFH already captured elsewhere)
+    if (has('facialThirds') && !isNeg('facialThirds')) {
+      // Only add if not duplicating LAFH
+      if (!(val('facialThirds').includes('lower') && has('lafh') && !isNeg('lafh'))) {
+        skVert.push({ text: `Facial thirds: ${val('facialThirds')}` });
+      }
+    }
+
+    // SKELETAL — TRANSVERSE
+    const skTrans = [];
+    if (has('transverseConstriction') && !isNeg('transverseConstriction'))
+      skTrans.push({ text: val('transverseConstriction') });
+
+    // SOFT TISSUE — SAGITTAL
+    const stSag = [];
+    if (has('facialProfile') && !isNeg('facialProfile')) stSag.push({ text: `${val('facialProfile').charAt(0).toUpperCase() + val('facialProfile').slice(1)} facial profile` });
+    if (has('upperLip') && !isNeg('upperLip')) stSag.push({ text: `Upper lip ${val('upperLip')}` });
+    if (has('lowerLip') && !isNeg('lowerLip')) stSag.push({ text: `Lower lip ${val('lowerLip')}` });
+    if (has('lipThickness') && !isNeg('lipThickness')) stSag.push({ text: `${val('lipThickness').charAt(0).toUpperCase() + val('lipThickness').slice(1)} lip soft tissue thickness` });
+    if (has('nasolabialAngle') && !isNeg('nasolabialAngle')) stSag.push({ text: `${val('nasolabialAngle').charAt(0).toUpperCase() + val('nasolabialAngle').slice(1)} nasolabial angle` });
+
+    // SOFT TISSUE — VERTICAL
+    const stVert = [];
+    if (has('facialThirds') && !isNeg('facialThirds')) stVert.push({ text: `Proportion of facial thirds: ${val('facialThirds')}` });
+    if (has('lipCompetence') && !isNeg('lipCompetence')) stVert.push({ text: `Lips ${val('lipCompetence')}` });
+    if (has('lipLine') && !isNeg('lipLine')) stVert.push({ text: `${val('lipLine').charAt(0).toUpperCase() + val('lipLine').slice(1)} lip line` });
+
+    // SOFT TISSUE — TRANSVERSE
+    const stTrans = [];
+    if (has('facialAsymmetry') && !isNeg('facialAsymmetry')) stTrans.push({ text: `Facial asymmetry: ${val('facialAsymmetry')}` });
+    if (has('buccalCorridors') && !isNeg('buccalCorridors')) stTrans.push({ text: `${val('buccalCorridors').charAt(0).toUpperCase() + val('buccalCorridors').slice(1)} buccal corridors` });
+
+    // DENTAL — SAGITTAL
+    const dSag = [];
+    if (has('molarR') || has('molarL')) {
+      let txt = 'Molar: ';
+      if (has('molarR')) txt += `R ${val('molarR')}`;
+      if (has('molarR') && has('molarL')) txt += ', ';
+      if (has('molarL')) txt += `L ${val('molarL')}`;
+      dSag.push({ text: txt });
+    }
+    if (has('canineR') || has('canineL')) {
+      let txt = 'Canine: ';
+      if (has('canineR')) txt += `R ${val('canineR')}`;
+      if (has('canineR') && has('canineL')) txt += ', ';
+      if (has('canineL')) txt += `L ${val('canineL')}`;
+      dSag.push({ text: txt });
+    }
+    if (has('upperInclination') && !isNeg('upperInclination')) dSag.push({ text: `Upper incisors ${val('upperInclination')}` });
+    if (has('lowerInclination') && !isNeg('lowerInclination')) dSag.push({ text: `Lower incisors ${val('lowerInclination')}` });
+    if (has('upperPosition') && !isNeg('upperPosition')) dSag.push({ text: `Upper incisors ${val('upperPosition')}` });
+    if (has('lowerPosition') && !isNeg('lowerPosition')) dSag.push({ text: `Lower incisors ${val('lowerPosition')}` });
+    if (has('overjet')) dSag.push({ text: `Overjet: ${val('overjet')} mm` });
+    if (has('anteriorCrossbite') && val('anteriorCrossbite') === 'present') {
+      const n = has('anteriorCrossbiteNotes') ? ` (${val('anteriorCrossbiteNotes')})` : '';
+      dSag.push({ text: `Anterior crossbite${n}` });
+    }
+
+    // DENTAL — VERTICAL
+    const dVert = [];
+    if (has('overbite')) dVert.push({ text: `Overbite: ${val('overbite')}%` });
+    if (has('curveOfSpee') && !isNeg('curveOfSpee')) dVert.push({ text: `${val('curveOfSpee').charAt(0).toUpperCase() + val('curveOfSpee').slice(1)} curve of Spee` });
+
+    // DENTAL — TRANSVERSE
+    const dTrans = [];
+    if (has('archAsymmetry') && !isNeg('archAsymmetry')) dTrans.push({ text: `Arch asymmetry: ${val('archAsymmetry')}` });
+    if (has('occlusalCant') && val('occlusalCant') === 'present') dTrans.push({ text: 'Occlusal cant present' });
+    if (has('posteriorCrossbite') && !isNeg('posteriorCrossbite')) dTrans.push({ text: `Posterior dental crossbite ${val('posteriorCrossbite')}` });
+    // Dental midlines
+    const midParts = [];
+    if (has('upperMidlinePos')) {
+      let u = `U: ${val('upperMidlinePos')}`;
+      if (val('upperMidlinePos') !== 'on' && has('upperMidlineMm')) u += ` ${val('upperMidlineMm')} mm`;
+      midParts.push(u);
+    }
+    if (has('lowerMidlinePos')) {
+      let l = `L: ${val('lowerMidlinePos')}`;
+      if (val('lowerMidlinePos') !== 'on' && has('lowerMidlineMm')) l += ` ${val('lowerMidlineMm')} mm`;
+      midParts.push(l);
+    }
+    if (midParts.length) dTrans.push({ text: `Midline — ${midParts.join('; ')}` });
+
+    // DENTAL — INTRA-ARCH
+    const dIntra = [];
+    if (has('missingTeeth') && !['none','n/a'].includes(val('missingTeeth').toLowerCase()))
+      dIntra.push({ text: `Congenitally missing: ${val('missingTeeth')}` });
+    if (has('previousExtractions') && !['none','n/a'].includes(val('previousExtractions').toLowerCase()))
+      dIntra.push({ text: `Previous extractions: ${val('previousExtractions')}` });
+
+    // Rotated — upper
+    if (has('rotatedUpperType') && !isNeg('rotatedUpperType')) {
+      let txt = val('rotatedUpperType') === 'specific' && has('rotatedUpperSpecific')
+        ? `Upper rotated teeth: ${val('rotatedUpperSpecific')}`
+        : `Upper: ${val('rotatedUpperType')}`;
+      dIntra.push({ text: txt });
+    }
+    // Rotated — lower
+    if (has('rotatedLowerType') && !isNeg('rotatedLowerType')) {
+      let txt = val('rotatedLowerType') === 'specific' && has('rotatedLowerSpecific')
+        ? `Lower rotated teeth: ${val('rotatedLowerSpecific')}`
+        : `Lower: ${val('rotatedLowerType')}`;
+      dIntra.push({ text: txt });
+    }
+    // Malposed/blocked-out
+    if (has('malposedUpperType') && !isNeg('malposedUpperType')) {
+      let txt = val('malposedUpperType') === 'specific' && has('malposedUpperSpecific')
+        ? `Upper blocked-out/displaced: ${val('malposedUpperSpecific')}`
+        : `Upper: ${val('malposedUpperType')}`;
+      dIntra.push({ text: txt });
+    }
+    if (has('malposedLowerType') && !isNeg('malposedLowerType')) {
+      let txt = val('malposedLowerType') === 'specific' && has('malposedLowerSpecific')
+        ? `Lower blocked-out/displaced: ${val('malposedLowerSpecific')}`
+        : `Lower: ${val('malposedLowerType')}`;
+      dIntra.push({ text: txt });
+    }
+    // Bolton
+    if (has('boltonDiscrepancy')) dIntra.push({ text: `Bolton: ${val('boltonDiscrepancy')}` });
+    // Spacing/Crowding
+    if (has('upperSpaceType') && !isNeg('upperSpaceType')) {
+      const mm = has('upperSpaceMm') ? ` ${val('upperSpaceMm')} mm` : '';
+      dIntra.push({ text: `U: ${val('upperSpaceType')}${mm}` });
+    }
+    if (has('lowerSpaceType') && !isNeg('lowerSpaceType')) {
+      const mm = has('lowerSpaceMm') ? ` ${val('lowerSpaceMm')} mm` : '';
+      dIntra.push({ text: `L: ${val('lowerSpaceType')}${mm}` });
+    }
+
+    return { generalItems, pathItems, skSag, skVert, skTrans, stSag, stVert, stTrans, dSag, dVert, dTrans, dIntra };
+  }
+
+  function renderSheet(out) {
+    let html = '';
+
+    html += `<div class="output-section">
+      <div class="output-section-title">General</div>
+      ${renderItems(out.generalItems)}
+    </div>`;
+
+    html += `<div class="output-section">
+      <div class="output-section-title">Pathological</div>
+      ${renderItems(out.pathItems)}
+    </div>`;
+
+    html += `<div class="output-section">
+      <div class="output-section-title">Skeletal</div>
+      <div class="output-sub"><div class="output-sub-title">Sagittal</div>${renderItems(out.skSag)}</div>
+      <div class="output-sub"><div class="output-sub-title">Vertical</div>${renderItems(out.skVert)}</div>
+      <div class="output-sub"><div class="output-sub-title">Transverse</div>${renderItems(out.skTrans)}</div>
+    </div>`;
+
+    html += `<div class="output-section">
+      <div class="output-section-title">Soft Tissue</div>
+      <div class="output-sub"><div class="output-sub-title">Sagittal</div>${renderItems(out.stSag)}</div>
+      <div class="output-sub"><div class="output-sub-title">Vertical</div>${renderItems(out.stVert)}</div>
+      <div class="output-sub"><div class="output-sub-title">Transverse</div>${renderItems(out.stTrans)}</div>
+    </div>`;
+
+    html += `<div class="output-section">
+      <div class="output-section-title">Dental</div>
+      <div class="output-sub"><div class="output-sub-title">Sagittal</div>${renderItems(out.dSag)}</div>
+      <div class="output-sub"><div class="output-sub-title">Vertical</div>${renderItems(out.dVert)}</div>
+      <div class="output-sub"><div class="output-sub-title">Transverse</div>${renderItems(out.dTrans)}</div>
+      <div class="output-sub"><div class="output-sub-title">Intra-arch</div>${renderItems(out.dIntra)}</div>
+    </div>`;
+
+    document.getElementById('sheetOutput').innerHTML = html;
+  }
+
+  function renderSpoken(out) {
+    const itemsToText = (arr) => arr.filter(i => i && i.text).map(i => i.text).join(', ');
+    const lower = (s) => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+
+    let parts = [];
+
+    // --- GENERAL ---
+    if (out.generalItems.length) {
+      parts.push(`<span class="highlight">Generally</span>, the patient has ${lower(itemsToText(out.generalItems))}.`);
+    }
+
+    // --- PATHOLOGICAL ---
+    if (out.pathItems.length) {
+      parts.push(`<span class="highlight">Pathologically</span>, the patient has ${lower(itemsToText(out.pathItems))}.`);
+    }
+
+    // --- SKELETAL (with plane subdivisions) ---
+    const skParts = [];
+    if (out.skSag.length) skParts.push(`in the <span class="highlight">sagittal plane</span>, ${lower(itemsToText(out.skSag))}`);
+    if (out.skVert.length) skParts.push(`<span class="highlight">vertically</span>, ${lower(itemsToText(out.skVert))}`);
+    if (out.skTrans.length) skParts.push(`<span class="highlight">transversely</span>, ${lower(itemsToText(out.skTrans))}`);
+    if (skParts.length) {
+      parts.push(`<span class="highlight">Skeletally</span>, ${skParts.join('. ')}.`);
+    }
+
+    // --- SOFT TISSUE ---
+    const stParts = [];
+    if (out.stSag.length) stParts.push(lower(itemsToText(out.stSag)));
+    if (out.stVert.length) stParts.push(lower(itemsToText(out.stVert)));
+    if (out.stTrans.length) stParts.push(lower(itemsToText(out.stTrans)));
+    if (stParts.length) {
+      parts.push(`<span class="highlight">Soft tissue-wise</span>, the patient has ${stParts.join(', ')}.`);
+    }
+
+    // --- DENTAL (with plane subdivisions) ---
+    const dParts = [];
+    if (out.dSag.length) dParts.push(`in the <span class="highlight">sagittal plane</span>, ${lower(itemsToText(out.dSag))}`);
+    if (out.dVert.length) dParts.push(`<span class="highlight">vertically</span>, ${lower(itemsToText(out.dVert))}`);
+    if (out.dTrans.length) dParts.push(`<span class="highlight">transversely</span>, ${lower(itemsToText(out.dTrans))}`);
+    if (out.dIntra.length) dParts.push(`<span class="highlight">intra-arch</span>, ${lower(itemsToText(out.dIntra))}`);
+    if (dParts.length) {
+      parts.push(`<span class="highlight">Dentally</span>, ${dParts.join('. ')}.`);
+    }
+
+    if (parts.length === 0) {
+      document.getElementById('spokenOutput').innerHTML = '<div class="empty-state">Start filling the form to see the spoken presentation here.</div>';
+      return;
+    }
+
+    document.getElementById('spokenOutput').innerHTML = parts.join('\n\n');
+  }
+
+  function render() {
+    const out = buildSheetOutput();
+    renderSheet(out);
+    renderSpoken(out);
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const btn = document.getElementById('tabBtn-' + tab);
+    if (btn) btn.classList.add('active');
+    const content = document.getElementById('tab-' + tab);
+    if (content) content.classList.add('active');
+  }
+
+  function copyOutput() {
+    const btn = document.getElementById('copyBtn');
+    const activeTab = document.querySelector('.tab.active').textContent.trim();
+    let text = '';
+
+    if (activeTab === 'Sheet Format') {
+      text = document.getElementById('sheetOutput').innerText;
+    } else {
+      text = document.getElementById('spokenOutput').innerText;
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+    });
+  }
+
+  function resetAll() {
+    if (!confirm('Clear all fields?')) return;
+    inputIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.value = ''; state[id] = ''; }
+    });
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    const notice = document.getElementById('resetNotice');
+    notice.textContent = 'Form cleared';
+    setTimeout(() => notice.textContent = '', 1500);
+    render();
+  }
+
+  // Restore state and do initial render
+  restoreState();
+  render();
+</script>
+</body>
+</html>
